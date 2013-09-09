@@ -11,7 +11,7 @@ typedef struct ext2_inode         INODE;
 typedef struct ext2_dir_entry_2 DIR;
 
 #define BLK 1024
-char buf1[BLK], buf2[BLK];
+char buf1[BLK], buf2[BLK],buf3[BLK];
 char temp[256];
 int prints(char *s)
 {
@@ -76,8 +76,6 @@ int main()
     getblk(2, buf1);
     gp = (GD *)buf1;
     iblk = (u16)gp->bg_inode_table;
-    prints("inodes blk = "); putc(iblk + '0'); prints("\n\r");
-
     getblk((u16)iblk, buf1);  // read first inode block block
     ip = (INODE *)buf1 + 1;   // ip->root inode #2
     
@@ -102,7 +100,7 @@ int main()
     }
     */
 
-    prints("\n\rboot img: ");
+    prints("\n\rimg: ");
     scans(temp);
     //prints("\n\rfinding: ");
     //prints("boot");
@@ -117,22 +115,20 @@ int main()
     i = search(ip,temp);
     getblk(i/8+iblk,buf1);
     ip = (INODE *)buf1 + (i-1)%8;
+    setes(0x1000);
     for (i = 0;i<12;i++)
     {
         getblk((u16)ip->i_block[i],0x1000+BLK*i);
         putc('0'+ip->i_block[i]);
     }
-    getblk((u16)ip->i_block[i],buf2);
-    i=0;
-    up = (u16 *) buf2;
-    while(*(up+i)!=0)
+    getblk((u16)ip->i_block[i],buf3);
+    up = (u16 *) buf3;
+    while(*(up)!=0)
     {
-        getblk(*(up+i),0x1000+BLK*(i+12));
+        getblk(*up,0x1000+BLK*(i));
+        putc('0'+*up);
+        up++;
         i++;
-        putc('0');
-    
     }
-    getc();
-    setes(0x1000);
     return 1;
 }
