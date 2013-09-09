@@ -11,7 +11,7 @@ typedef struct ext2_inode         INODE;
 typedef struct ext2_dir_entry_2 DIR;
 
 #define BLK 1024
-char buf1[BLK], buf2[BLK],buf3[BLK];
+char buf1[BLK], buf2[BLK];
 char temp[256];
 int prints(char *s)
 {
@@ -71,7 +71,7 @@ int main()
     GD    *gp;
     INODE *ip;
     DIR   *dp;
-    u16   *up;
+    u32   *up;
     //prints("read decsriptor block #2 into buf1[]\n\r");
     getblk(2, buf1);
     gp = (GD *)buf1;
@@ -115,20 +115,23 @@ int main()
     i = search(ip,temp);
     getblk(i/8+iblk,buf1);
     ip = (INODE *)buf1 + (i-1)%8;
+    getblk((u16)ip->i_block[12],buf2);
+    up = (u16 *) buf2;
     setes(0x1000);
     for (i = 0;i<12;i++)
     {
-        getblk((u16)ip->i_block[i],0x1000+BLK*i);
-        putc('0'+ip->i_block[i]);
+        getblk((u16)ip->i_block[i],BLK*i);
+        //putc('0'+ip->i_block[i]);
     }
-    getblk((u16)ip->i_block[i],buf3);
-    up = (u16 *) buf3;
+    getblk((u16)ip->i_block[i],buf2);
+    up = (u32 *) buf2;
     while(*(up)!=0)
     {
-        getblk(*up,0x1000+BLK*(i));
-        putc('0'+*up);
+        getblk((u16)*up,BLK*(i));
+        //putc('0'+*up);
         up++;
         i++;
     }
+    //getc();
     return 1;
 }
