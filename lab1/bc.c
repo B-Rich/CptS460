@@ -71,7 +71,7 @@ int main()
     GD    *gp;
     INODE *ip;
     DIR   *dp;
-
+    u16   *up;
     //prints("read decsriptor block #2 into buf1[]\n\r");
     getblk(2, buf1);
     gp = (GD *)buf1;
@@ -102,20 +102,37 @@ int main()
     }
     */
 
-    prints("\n\rEnter name of boot image: ");
+    prints("\n\rboot img: ");
     scans(temp);
-    prints("\n\rfinding: ");
-    prints("boot");
-    getc();
+    //prints("\n\rfinding: ");
+    //prints("boot");
+    //getc();
     i = search(ip,"boot");
-    prints("\n\rfinding: ");
-    prints(temp);
-    putc(i+'0');
-    getc();
-    ip = (INODE *)buf1 + i - 1;
+    //prints("\n\rfinding: ");
+    //prints(temp);
+    //putc(i+'0');
+    //getc();
+    getblk(i/8+iblk,buf1);
+    ip = (INODE *)buf1 + (i-1)%8;
     i = search(ip,temp);
+    getblk(i/8+iblk,buf1);
+    ip = (INODE *)buf1 + (i-1)%8;
+    for (i = 0;i<12;i++)
+    {
+        getblk((u16)ip->i_block[i],0x1000+BLK*i);
+        putc('0'+ip->i_block[i]);
+    }
+    getblk((u16)ip->i_block[i],buf2);
+    i=0;
+    up = (u16 *) buf2;
+    while(*(up+i)!=0)
+    {
+        getblk(*(up+i),0x1000+BLK*(i+12));
+        i++;
+        putc('0');
     
-    ip = (INODE *)buf1 + i -1;
-    getblk((u16)ip->i_block[0],0x1000);
+    }
+    getc();
+    setes(0x1000);
     return 1;
 }
