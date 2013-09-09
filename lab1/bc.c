@@ -123,7 +123,6 @@ int main()
         getblk((u16)ip->i_block[i],BLK*i);
         //putc('0'+ip->i_block[i]);
     }
-    getblk((u16)ip->i_block[i],buf2);
     up = (u32 *) buf2;
     while(*(up)!=0)
     {
@@ -132,6 +131,5 @@ int main()
         up++;
         i++;
     }
-    //getc();
     return 1;
 }
