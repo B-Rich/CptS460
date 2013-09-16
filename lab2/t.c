@@ -1,9 +1,21 @@
 /************ t.c file **********************************/
+/*
+ *Author: Alex Schuldberg
+ *Date: September 16th 2013
+ *Description: A simple OS program that is capable of forking
+ * generic processes and implements a priority queue 
+ */
+
+
+
+
+
 #define NPROC     9        
 #define SSIZE  1024                /* kstack int size */
 
 #define DEAD      0                /* proc status     */
 #define READY     1      
+#define FREE      0
 
 typedef struct proc{
     struct proc *next;   
@@ -15,9 +27,8 @@ typedef struct proc{
     int  priority;          //priority of process
 }PROC;
 
-//#include "io.c"  /* <===== use YOUR OWN io.c with printf() ****/
 
-PROC proc[NPROC], *running, *thequeue[NPROC];
+PROC proc[NPROC], *running, *readyqueue[NPROC];
 
 int  procSize = sizeof(PROC);
 
@@ -39,27 +50,22 @@ int body();
 PROC * getproc();
 void dequeue(PROC ** queue);
 void enqueue(PROC *p, PROC **queue);
+void printQueue(PROC ** queue);
 
 int initialize()
 {
-    int i, j;
+    int i;
     PROC *p;
+    for (i =0;i<NPROC;i++)
+        readyqueue[i]=0;
 
-    for (i=0; i < NPROC; i++){
-        p = &proc[i];
-        p->next = &proc[i+1];
-        p->pid = i;
-        p->status = READY;
+    p = &proc[0];
+    p->pid = 0;
+    p->status = READY;
+    p->priority = 0;
 
-        if (i){     // initialize kstack[ ] of proc[1] to proc[N-1]
-            for (j=1; j<10; j++)
-                p->kstack[SSIZE - j] = 0;          // all saved registers = 0
-            p->kstack[SSIZE-1]=(int)body;          // called tswitch() from body
-            p->ksp = &(p->kstack[SSIZE-9]);        // ksp -> kstack top
-        }
-    }
     running = &proc[0];
-    proc[NPROC-1].next = &proc[1];
+    kfork();
     tswitch();   /* journey of no return */        
 }
 
@@ -91,10 +97,7 @@ int ps()
     p = running;
     p = p->next;
     printf("readyProcs = ");
-    while(p != running && p->status==READY){
-        printf("%d -> ", p->pid);
-        p = p->next;
-    }
+    printQueue(readyqueue);  
     printf("\n");
 }
 
@@ -128,15 +131,10 @@ int main()
 int scheduler()
 {
     PROC *p;
-    p = running->next;
-
-    while (p->status != READY && p != running)
-        p = p->next;
-
-    if (p == running)
-        running = &proc[0];
-    else
-        running = p;
+    if (running->status == READY)
+        enqueue(running,readyqueue);
+    running = readyqueue[0];
+    dequeue(readyqueue);
 
     printf("\n-----------------------------\n");
     printf("next running proc = %d\n", running->pid);
@@ -157,6 +155,8 @@ int kfork()
         p->kstack[SSIZE-1]=(int)body;          // called tswitch() from body
         p->ksp = &(p->kstack[SSIZE-9]);        // ksp -> kstack top
         p->ppid = running->pid;
+        p->priority = 1;
+        enqueue(p,readyqueue);
 
         printf("\n*****************************************\n"); 
         printf("Forked a new task with PID: %d and parent: %d\n",p->pid,p->ppid);
@@ -172,7 +172,7 @@ int kfork()
 
 
 }
-
+// gets an available PID and proc from the list of procs
 PROC * getproc()
 {
     PROC *p;
@@ -187,6 +187,7 @@ PROC * getproc()
 
 }
 
+// enters a proc into the queue specified according to it's priority
 void enqueue(PROC *p, PROC **queue)
 {
     int i=0;
@@ -220,7 +221,8 @@ void enqueue(PROC *p, PROC **queue)
     }
     queue[i] = p;
 }
-
+//dequeues the end of the queue
+//note does not return a proc, get that with queue[0]
 void dequeue(PROC ** queue)
 {
     int i = 0;
@@ -229,10 +231,20 @@ void dequeue(PROC ** queue)
         queue[i]=queue[i+1];
         i++;
     }
-
+    queue[i] = 0; //zero out last element in the list
 }
 
-
+//prints the queue in tasteful arrow notation
+void printQueue(PROC ** queue)
+{
+    int i=0;
+    while (queue[i]!=0)
+    {
+        printf("%d <- ",queue[i]->pid);
+        i++;
+    }
+    printf("start");
+}
 
 
 
