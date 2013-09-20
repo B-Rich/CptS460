@@ -16,6 +16,8 @@
 #define DEAD      0                /* proc status     */
 #define READY     1      
 #define FREE      0
+#define ZOMBIE    2
+#define SLEEP     3
 
 typedef struct proc{
     struct proc *next;   
@@ -24,7 +26,9 @@ typedef struct proc{
     int  ppid;              //the parent's PID
     int  status;            /* READY|DEAD, etc */
     int  kstack[SSIZE];     // kmode stack of task
-    int  priority;          //priority of process
+    int  priority;//priority of process
+    int  exitVal;
+    int  event;
 }PROC;
 
 
@@ -51,6 +55,10 @@ PROC * getproc();
 void dequeue(PROC ** queue);
 void enqueue(PROC *p, PROC **queue);
 void printQueue(PROC ** queue);
+int sleep(int event);
+void wakeup(int event);
+int wait( int * status);
+
 
 int initialize()
 {
@@ -65,7 +73,6 @@ int initialize()
     p->priority = 0;
 
     running = &proc[0];
-    kfork();
     tswitch();   /* journey of no return */        
 }
 
@@ -78,12 +85,34 @@ char *gasp[NPROC]={
     "Oh! I am a goner .............", 
     "Bye! Bye! World...............",      
 };
-
+//kills a process
 int grave(){
+    int i,parent;
+    if (running->pid == 1)
+    {
+        for (i = 2;i<NPROC;i++)
+        {
+            if ((&proc[i])->status != DEAD)
+                break;
+        }
+
+
+    }
+    if (running->pid != 1)
+    {
+        running->exitVal = 0;
+        for (i = 2;i<NPROC;i++)
+        {
+            if ((&proc[i])->ppid == running->pid)
+                (&proc[i])->ppid = 1;
+        }
+    }
+    running->status = ZOMBIE;
+    parent = running->ppid;
+    wakeup((int)(&proc[parent]));
     printf("\n*****************************************\n"); 
     printf("Task %d %s\n", running->pid,gasp[(running->pid) % 4]);
     printf("*****************************************\n");
-    running->status = DEAD;
 
     tswitch();   /* journey of no return */        
 }
@@ -106,12 +135,13 @@ int body()
     while(1){
         ps();
         printf("I am Proc %d in body()\n", running->pid);
-        printf("Input a char : [s|q|f] ");
+        printf("Input a char : [s|q|f|w] ");
         c=getc();
         switch(c){
             case 's': tswitch(); break;
             case 'q': grave();   break;
             case 'f': kfork();   break;
+            case 'w': wait();    break;
             default :            break;  
         }
     }
@@ -122,6 +152,7 @@ int main()
 {
     printf("\nWelcome to the 460 Multitasking System\n");
     initialize();
+    kfork();
     printf("P0 switch to P1\n");
     tswitch();
     printf("P0 resumes: all dead, happy ending\n");
@@ -159,7 +190,7 @@ int kfork()
         enqueue(p,readyqueue);
 
         printf("\n*****************************************\n"); 
-        printf("Forked a new task with PID: %d and parent: %d\n",p->pid,p->ppid);
+        printf("Forked a new task with PID: %d and parent: %d\n and address %d\n",p->pid,p->ppid,p);
         printf("*****************************************\n");
 
 
@@ -244,6 +275,62 @@ void printQueue(PROC ** queue)
         i++;
     }
     printf("start");
+}
+
+//tells the proc to wait until one of it's children becomes zombified
+//childless processes are not alowed to wait
+int wait( int * status)
+{
+    int i,childPid;
+    //first we find the child
+    for (i = 2;i<NPROC;i++)
+    {
+        if ((&proc[i])->ppid == running->pid)
+        {
+            childPid = i;
+            break;
+        }
+    }
+    if (i==NPROC)
+    {
+        return -1;
+    }
+    while(1)
+    {
+        //printf("got here 1,childPid = %d\n",childPid);
+
+        if((&proc[childPid])->status == ZOMBIE)
+        {
+            *status = (&proc[childPid])->exitVal;
+            (&proc[childPid])->status = FREE;
+            //printf("got here2, childpid = %d\n",childPid);
+            return childPid;
+        }
+        sleep(running);
+    }
+}
+//makes a proc sleep until woken by the specified event
+int sleep(int event)
+{
+    running->event = event;
+    running->status = SLEEP;
+    printf("sleeping on event: %d",event);
+    tswitch();
+}
+//wakes all the procs up that are sleeping on the specified event
+void wakeup(int event)
+{
+    int i;
+    printf("waking on event: %d",event);
+    for (i = 0;i<NPROC;i++)
+    {
+        if ((&proc[i])->event == event)
+        {
+            (&proc[i])->status = READY;
+            enqueue(&proc[i],readyqueue);
+        }
+
+    }
 }
 
 
