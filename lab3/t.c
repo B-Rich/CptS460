@@ -1,3 +1,10 @@
+/* Alex Schuldberg
+ * 11143076
+ * CPTS 460
+ * LAB 3
+ */
+
+
 #include "type.h"
 
 /********* in type.h ***********
