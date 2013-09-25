@@ -55,13 +55,60 @@ char *pname[]={"P0", "P1", "P2", "P3",  "P4", "P5","P6", "P7", "P8" };
 #include "int.c"
  ************/
 
-int do_tswitch(){ }
-int do_kfork(){ }
-int do_wait(){ }
-int do_exit(){ }
-int do_ps(){ }
-int kmode(){ }
-int chname(){ }
+int do_tswitch();
+int do_kfork();
+int do_wait();
+int do_exit()
+{
+   return grave();
+}
+int do_ps()
+{
+    int i = 0;
+    printf("\nName\tStatus\tPID\tPPID");
+    for (i = 0; i<NPROC;i++)
+    {
+        printf("\n%s\t",proc[i].name);
+        switch(proc[i].status)
+        {
+            case FREE:
+                printf("FREE\t");
+                break;
+            case READY:
+                printf("READY\t");
+                break;
+            case RUNNING:
+                printf("RUNNING\t");
+                break;
+            case STOPPED:
+                printf("STOPPED\t");
+                break;
+            case SLEEP:
+                printf("SLEEP\t");
+                break;
+            case ZOMBIE:
+                printf("ZOMBIE\t");
+                break;
+        }
+        printf("%d\t%d\n",proc[i].pid,proc[i].ppid);
+
+    }
+}
+int kmode()
+{
+    return body();
+}
+int chname(int name)
+{
+    int i=0;
+    for (i = 0;i<32;i++)
+    {
+        running->name[i]=get_byte(running->uss,name+i);
+        if (get_byte(running->uss,name+i)==0)
+            break;
+        printf("%c",get_byte(running->uss,name+i));
+    }
+}
 
 int init()
 {
@@ -210,12 +257,122 @@ int kfork(char *filename)
     printf("Proc%d forked a child %d segment=%x\n", running->pid,p->pid,segment);
     return(p->pid);
 }
+//kforks the running proc with /bin/u1
+int do_kfork()
+{
+    return kfork("/bin/u1");
 
-//int do_kfork()
-//{
+}
+//tswitches the running process
+int do_tswitch()
+{ 
+    return tswitch();
+}
+
+//tells the proc to wait until one of it's children becomes zombified
+//childless processes are not alowed to wait
+int wait( int * status)
+{
+    int i,childPid;
+    //first we find the child
+    for (i = 2;i<NPROC;i++)
+    {
+        if ((&proc[i])->ppid == running->pid)
+        {
+            childPid = i;
+            break;
+        }
+    }
+    if (i==NPROC)
+    {
+        return -1;
+    }
+    while(1)
+    {
+
+        if((&proc[childPid])->status == ZOMBIE)
+        {
+            *status = (&proc[childPid])->exitCode;
+            (&proc[childPid])->status = FREE;
+            return childPid;
+        }
+        sleep(running);
+    }
+}
+//makes a proc sleep until woken by the specified event
+int sleep(int event)
+{
+    running->event = event;
+    running->status = SLEEP;
+    enqueue(&sleepList,running);
+    printf("sleeping on event: %d",event);
+    tswitch();
+}
+//wakes all the procs up that are sleeping on the specified event
+void wakeup(int event)
+{
+    int i;
+    printf("waking on event: %d",event);
+    for (i = 0;i<NPROC;i++)
+    {
+        if ((&proc[i])->event == event)
+        {
+            (&proc[i])->status = READY;
+            enqueue(&readyQueue,&proc[i]);
+            dequeue(&sleepList);
+        }
+    }
+}
+
+int do_wait()
+{
+    int i;
+    wait(i);
+    return i;
+
+}
+
+char *gasp[NPROC]={
+    "Oh! You are killing me .......",
+    "Oh! I am dying ...............", 
+    "Oh! I am a goner .............", 
+    "Bye! Bye! World...............",      
+};
 
 
-//}
+//kills a process
+int grave(){
+    int i,parent;
+    if (running->pid == 1)
+    {
+        for (i = 2;i<NPROC;i++)
+        {
+            if ((&proc[i])->status != FREE)
+                return;
+        }
+
+
+    }
+    if (running->pid != 1)
+    {
+        running->exitCode = 0;
+        for (i = 2;i<NPROC;i++)
+        {
+            if ((&proc[i])->ppid == running->pid)
+                (&proc[i])->ppid = 1;
+        }
+    }
+    running->status = ZOMBIE;
+    parent = running->ppid;
+    wakeup((int)(&proc[parent]));
+    printf("\n*****************************************\n"); 
+    printf("Task %d %s\n", running->pid,gasp[(running->pid) % 4]);
+    printf("*****************************************\n");
+
+    tswitch();   /* journey of no return */        
+}
+
+
 
 /*************************************************************************
   usp  1   2   3   4   5   6   7   8   9  10   11   12    13  14  15  16
