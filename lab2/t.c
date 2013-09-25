@@ -58,7 +58,8 @@ void printQueue(PROC ** queue);
 int sleep(int event);
 void wakeup(int event);
 int wait( int * status);
-
+void doWake();
+int doSleep();
 
 int initialize()
 {
@@ -93,7 +94,7 @@ int grave(){
         for (i = 2;i<NPROC;i++)
         {
             if ((&proc[i])->status != DEAD)
-                break;
+                return;
         }
 
 
@@ -135,17 +136,38 @@ int body()
     while(1){
         ps();
         printf("I am Proc %d in body()\n", running->pid);
-        printf("Input a char : [s|q|f|w] ");
+        printf("Input a char : [[s]witch|[k]ill|[f]ork|[w]ait|w[a]ke|s[l]eep] ");
         c=getc();
         switch(c){
             case 's': tswitch(); break;
-            case 'q': grave();   break;
+            case 'k': grave();   break;
             case 'f': kfork();   break;
             case 'w': wait();    break;
+            case 'a': doWake();  break;
+            case 'l': doSleep(); break;
             default :            break;  
         }
     }
 }
+
+void doWake()
+{
+    char c;
+    printf("\nenter an event to wake\n");
+    c = getc();
+    return wakeup(c-'0');
+}
+int doSleep()
+{
+    char c;
+    printf("\nenter an event to sleep on\n");
+    c = getc();
+    return sleep(c-'0');
+
+}
+
+
+
 
 
 int main()
@@ -297,13 +319,11 @@ int wait( int * status)
     }
     while(1)
     {
-        //printf("got here 1,childPid = %d\n",childPid);
 
         if((&proc[childPid])->status == ZOMBIE)
         {
             *status = (&proc[childPid])->exitVal;
             (&proc[childPid])->status = FREE;
-            //printf("got here2, childpid = %d\n",childPid);
             return childPid;
         }
         sleep(running);
