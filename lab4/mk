@@ -11,6 +11,8 @@ rm *.o mtx
 
 (cd USER; ./mku u1)
 
+(cd USER; ./mku u2)
+
 qemu-system-i386 -fda mtximage -no-fd-bootchk
 
 echo done

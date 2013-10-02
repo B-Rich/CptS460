@@ -1,7 +1,7 @@
 VFD=../mtximage
 
 mount -o loop $VFD /mnt
-rm /mnt/bin/*
+rm /mnt/bin/$1
 umount /mnt
 
 echo --------------------- make $1 -----------------------

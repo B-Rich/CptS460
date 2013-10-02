@@ -5,9 +5,9 @@ char *cmd[]={"getpid", "ps", "chname", "kmode", "switch", "wait", "exit","fork",
 
 int show_menu()
 {
-   printf("**************** Menu ****************************\n");
-   printf("* ps  chname  kmode  switch  wait  exit fork exec*\n");
-   printf("**************************************************\n");
+   printf("********************** Menu *************************\n");
+   printf("* ps  chname  kmode  switch  wait  exit  fork  exec *\n");
+   printf("*****************************************************\n");
 }
 
 int find_cmd(name) char *name;
@@ -87,7 +87,7 @@ int ufork()
     int child;
     printf("\nForking a new proc");
     child = syscall(7,0,0);
-    printf("\nchild spawned with PID %d",child);
+    printf("\nchild spawned with PID %d\n",child);
     return child;
 
 }
@@ -99,7 +99,7 @@ int uexec()
     printf("input path to image");
     gets(s);
     child = syscall(8,s,0);
-    printf("\nchild spawned with PID %d",child);
+    printf("\nchild spawned with PID %d\n",child);
     return child;
 
 

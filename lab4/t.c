@@ -65,6 +65,8 @@ char *pname[]={"P0", "P1", "P2", "P3",  "P4", "P5","P6", "P7", "P8" };
 int do_tswitch();
 int do_kfork();
 int do_wait();
+void copy_image(int child_segment);
+
 int do_exit()
 {
    return grave();
@@ -381,15 +383,126 @@ int grave(){
 
 int do_exec(int path)
 {
+    
+    PROC *p;
+    int  i, child,j;
+    u16  segment;
+    char file_path[32];
+    
+    p = running;
+    /*** get a PROC for child process: ***/
+
+    /* initialize the new proc and its stack */
+
+    /******* write C code to to do THIS YOURSELF ********************
+      Initialize p's kstack AS IF it had called tswitch() 
+      from the entry address of body():
+
+      HI   -1  -2    -3  -4   -5   -6   -7   -8    -9                LOW
+      -------------------------------------------------------------
+      |body| ax | bx | cx | dx | bp | si | di |flag|
+      ------------------------------------------------------------
+      ^
+      PROC.ksp ---|
+
+     ******************************************************************/
+    for (j=1; j<10;j++)
+        p->kstack[SSIZE-j];
+    p->kstack[SSIZE-1]=(int)goUmode;
+    p->ksp = &(p->kstack[SSIZE-9]);
+    enqueue(&readyQueue, p);
+
+    // make Umode image by loading the file designated
+    segment = (p->pid + 1)*0x1000;    
+    for (i = 0;i<32;i++)
+    {
+        file_path[i]=get_byte(running->uss,path+i);
+        if (get_byte(running->uss,path+i)==0)
+            break;
+    }
+    printf("\nloading %s\n",file_path);
+    load(file_path,segment);
 
 
+
+    //gotta fix that segment to make sure it doesnt reference wrong stuff
+    p->uss = segment;
+    p->usp = 0x1000 - 24;
+    put_word(0x0200,segment,0x1000-2);
+    put_word(segment,segment,0x1000-4);
+    for (j=3;j<11;j++)
+        put_word(0,segment,0x1000-2*j);
+    put_word(segment,segment,0x1000-22);
+    put_word(segment,segment,0x1000-24);
+
+
+    return p->pid;
 
 }
 int do_fork()
 {
+    
+    PROC *p;
+    int  i, child,j;
+    u16  segment;
+
+    /*** get a PROC for child process: ***/
+    if ( (p = get_proc(&freeList)) == 0){
+        printf("no more proc\n");
+        return(-1);
+    }
+
+    /* initialize the new proc and its stack */
+    p->status = READY;
+    p->ppid = running->pid;
+    p->parent = running;
+    p->priority  = 1;                 // all of the same priority 1
+
+    /******* write C code to to do THIS YOURSELF ********************
+      Initialize p's kstack AS IF it had called tswitch() 
+      from the entry address of body():
+
+      HI   -1  -2    -3  -4   -5   -6   -7   -8    -9                LOW
+      -------------------------------------------------------------
+      |body| ax | bx | cx | dx | bp | si | di |flag|
+      ------------------------------------------------------------
+      ^
+      PROC.ksp ---|
+
+     ******************************************************************/
+    for (j=1; j<10;j++)
+        p->kstack[SSIZE-j];
+    p->kstack[SSIZE-1]=(int)goUmode;
+    p->ksp = &(p->kstack[SSIZE-9]);
+    enqueue(&readyQueue, p);
+
+    // make Umode image by copying the segment from the host process
+    segment = (p->pid + 1)*0x1000;    
+    copy_image(segment);
+    //gotta fix that segment to make sure it doesnt reference wrong stuff
+    p->uss = segment;
+    p->usp = 0x1000 - 24;
+    put_word(0x0200,segment,0x1000-2);
+    put_word(segment,segment,0x1000-4);
+    for (j=3;j<11;j++)
+        put_word(0,segment,0x1000-2*j);
+    put_word(segment,segment,0x1000-22);
+    put_word(segment,segment,0x1000-24);
 
 
+    return p->pid;
+}
 
+void copy_image(int child_segment)
+{
+    int i = 0;
+    u16 word;
+    while (i<=0x1000)
+    {
+        word = get_word(running->uss,i);
+        put_word(word,child_segment,i);
+        i+=2;
+    }
 }
 
 /*************************************************************************
