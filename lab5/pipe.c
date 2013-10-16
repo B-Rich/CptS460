@@ -28,21 +28,34 @@ int pfd()
 //reads a pipe 
 int read_pipe(int fd, char *buf, int n)
 {
-    // your code for read_pipe()
-    
-}
+    int i;
+    char buff[1024];
+    for (i = 0;i<n;i++)
+    {
+        buff[i] = oft[fd].pipe_ptr->buf[i+oft[fd].pipe_ptr->head]; 
+        put_byte(buff[i],running->uss,buf+i);
+    }
+    buff[i]=0;
+    oft[fd].pipe_ptr->head += n;
+    printf("Read: ");
+    printf(buff);
+    printf(" from pipe\n");
 
+    return i;
+
+}
+//writes to a pipe
 int write_pipe(int fd, char *buf, int n)
 {
     // your code for write_pipe()
     int i;
     /*for (i = 0;i<32;i++)
-    {
-        running->name[i]=get_byte(running->uss,name+i);
-        if (get_byte(running->uss,name+i)==0)
-            break;
-        printf("%c",get_byte(running->uss,name+i));
-    }*/
+      {
+      running->name[i]=get_byte(running->uss,name+i);
+      if (get_byte(running->uss,name+i)==0)
+      break;
+      printf("%c",get_byte(running->uss,name+i));
+      }*/
 
     for (i = 0; i<n;i++)
     {
@@ -52,7 +65,7 @@ int write_pipe(int fd, char *buf, int n)
     show_pipe(oft[fd].pipe_ptr);
     return n;
 }
-
+//creates a pipe with two ends
 int kpipe(int pd[2])
 {
     // create a pipe; fill pd[0] pd[1] (in USER mode!!!) with descriptors
@@ -64,7 +77,7 @@ int kpipe(int pd[2])
         if (pipe[i].busy!=0)
         {
             j = i;
-            
+
             pipe[i].head = 0;
             pipe[i].tail = 0;
             pipe[i].room = 1024;
@@ -101,7 +114,7 @@ int kpipe(int pd[2])
         }
     }
     return pd;
-    
+
 }
 
 int close_pipe(int fd)
