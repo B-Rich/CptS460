@@ -233,7 +233,7 @@ int kfork(char *filename)
     enqueue(&readyQueue, p);
 
     // make Umode image by loading /bin/u1 into segment
-    segment = (p->pid + 1)*0x1000;
+    segment = (p->pid + 1)*0x2000;
     load(filename, segment);
 
     /*************** WRITE C CODE TO DO THESE ******************
@@ -248,13 +248,13 @@ int kfork(char *filename)
 
      ***********************************************************/
     p->uss = segment;
-    p->usp = 0x1000 - 24;
-    put_word(0x0200,segment,0x1000-2);
-    put_word(segment,segment,0x1000-4);
+    p->usp = 0x2000 - 24;
+    put_word(0x0200,segment,0x2000-2);
+    put_word(segment,segment,0x2000-4);
     for (j=3;j<11;j++)
-        put_word(0,segment,0x1000-2*j);
-    put_word(segment,segment,0x1000-22);
-    put_word(segment,segment,0x1000-24);
+        put_word(0,segment,0x2000-2*j);
+    put_word(segment,segment,0x2000-22);
+    put_word(segment,segment,0x2000-24);
     printf("Proc%d forked a child %d segment=%x\n", running->pid,p->pid,segment);
     return(p->pid);
 }

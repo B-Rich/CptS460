@@ -41,20 +41,20 @@ int fork()
      ******************************************************************/
     p->kstack[SSIZE-1]=(int)goUmode;
     
-    segment = (pid+1)*0x1000;
+    segment = (pid+1)*0x2000;
     copyImage(running->uss, segment, 32*1024);
 
     // YOUR CODE to make the child runnable in User mode  
 
     /**** ADD these : copy file descriptors ****/
     p->uss = segment;
-    p->usp = 0x1000 - 24;
-    put_word(0x0200,segment,0x1000-2);
-    put_word(segment,segment,0x1000-4);
+    p->usp = 0x2000 - 24;
+    put_word(0x0200,segment,0x2000-2);
+    put_word(segment,segment,0x2000-4);
     for (j=3;j<11;j++)
-        put_word(0,segment,0x1000-2*j);
-    put_word(segment,segment,0x1000-22);
-    put_word(segment,segment,0x1000-24);
+        put_word(0,segment,0x2000-2*j);
+    put_word(segment,segment,0x2000-22);
+    put_word(segment,segment,0x2000-24);
 
     for (i=0; i<NFD; i++){
         p->fd[i] = running->fd[i];
@@ -103,7 +103,7 @@ int exec(int path)
     enqueue(&readyQueue, p);
 
     // make Umode image by loading the file designated
-    segment = (p->pid + 1)*0x1000;    
+    segment = (p->pid + 1)*0x2000;    
     for (i = 0;i<32;i++)
     {
         file_path[i]=get_byte(running->uss,path+i);
@@ -117,13 +117,13 @@ int exec(int path)
 
     //gotta fix that segment to make sure it doesnt reference wrong stuff
     p->uss = segment;
-    p->usp = 0x1000 - 24;
-    put_word(0x0200,segment,0x1000-2);
-    put_word(segment,segment,0x1000-4);
+    p->usp = 0x2000 - 24;
+    put_word(0x0200,segment,0x2000-2);
+    put_word(segment,segment,0x2000-4);
     for (j=3;j<11;j++)
-        put_word(0,segment,0x1000-2*j);
-    put_word(segment,segment,0x1000-22);
-    put_word(segment,segment,0x1000-24);
+        put_word(0,segment,0x2000-2*j);
+    put_word(segment,segment,0x2000-22);
+    put_word(segment,segment,0x2000-24);
 
 
     return p->pid;
