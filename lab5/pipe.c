@@ -1,8 +1,8 @@
 show_pipe(PIPE *p)
 {
     int i, j;
-    printf("Data: %d \n", p->tail - p->head);
-    printf("Room: %d \n", 1024 - (p->tail - p->head));
+    printf("Data: %d \n", p->data);
+    printf("Room: %d \n", p->room);
     printf("------------ PIPE CONTENETS ------------\n");     
     printf(p->buf);
     printf("\n----------------------------------------\n");
@@ -14,12 +14,12 @@ int pfd()
 {
     int i;
     printf("fd\ttype\tmode\n----\t----\t----\n");
-    for (i = 0;i<10;i++)
+    for (i = 0;i<NFD;i++)
     {
-        if (running->fd[i]!= 0)
+        if (oft[i].refCount != 0)
         {
             printf("%d\tPIPE\t",i);
-            if (running->fd[i]->mode == READ_PIPE)
+            if (oft[i].mode == READ_PIPE)
                 printf("READ\n");
             else
                 printf("WRITE\n");
@@ -34,15 +34,27 @@ int read_pipe(int fd, char *buf, int n)
     char buff[1024];
     for (i = 0;i<n;i++)
     {
-        buff[i] = oft[fd].pipe_ptr->buf[i+oft[fd].pipe_ptr->head]; 
+        while(oft[fd].pipe_ptr->data == 0)
+        {
+            sleep(oft[fd].pipe_ptr); 
+        }
+        printf("head: %d",oft[fd].pipe_ptr->head);
+        buff[i] = oft[fd].pipe_ptr->buf[(i+oft[fd].pipe_ptr->head)%10]; 
         put_byte(buff[i],running->uss,buf+i);
+        oft[fd].pipe_ptr->room++;
+        oft[fd].pipe_ptr->data--;
+
     }
     buff[i]=0;
     oft[fd].pipe_ptr->head += n;
+
+    
     printf("Read: ");
     printf(buff);
     printf(" from pipe\n");
-
+    
+    wakeup(oft[fd].pipe_ptr);    
+    show_pipe(oft[fd].pipe_ptr);
     return i;
 
 }
@@ -51,20 +63,25 @@ int write_pipe(int fd, char *buf, int n)
 {
     // your code for write_pipe()
     int i;
-    /*for (i = 0;i<32;i++)
-      {
-      running->name[i]=get_byte(running->uss,name+i);
-      if (get_byte(running->uss,name+i)==0)
-      break;
-      printf("%c",get_byte(running->uss,name+i));
-      }*/
 
     for (i = 0; i<n;i++)
     {
-        oft[fd].pipe_ptr->buf[i+oft[fd].pipe_ptr->tail]=get_byte(running->uss,buf+i);
+        while (oft[fd].pipe_ptr->room == 0)
+        {
+            //sleep until room is available
+            printf("room: %d",oft[fd].pipe_ptr->room);
+            sleep(oft[fd].pipe_ptr);
+            
+        }
+
+        oft[fd].pipe_ptr->buf[(i+oft[fd].pipe_ptr->tail)%10]=get_byte(running->uss,buf+i);
+        oft[fd].pipe_ptr->room--;
+        oft[fd].pipe_ptr->data++;
     }
+
     oft[fd].pipe_ptr->tail = oft[fd].pipe_ptr->tail + n;
     show_pipe(oft[fd].pipe_ptr);
+    wakeup(oft[fd].pipe_ptr);
     return n;
 }
 //creates a pipe with two ends
@@ -76,13 +93,13 @@ int kpipe(int pd[2])
     pd[1]=-1;
     for (i=0;i<NPIPE;i++)
     {
-        if (pipe[i].busy!=0)
+        if (pipe[i].busy==0)
         {
             j = i;
 
             pipe[i].head = 0;
             pipe[i].tail = 0;
-            pipe[i].room = 1024;
+            pipe[i].room = 10;
             pipe[i].busy = 1;
 
             break;
