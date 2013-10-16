@@ -1,3 +1,4 @@
+// shows a pipe.
 show_pipe(PIPE *p)
 {
     int i, j;
@@ -135,7 +136,7 @@ int kpipe(int pd[2])
     return pd;
 
 }
-
+//closes a pipe
 int close_pipe(int fd)
 {
     OFT *op; PIPE *pp;

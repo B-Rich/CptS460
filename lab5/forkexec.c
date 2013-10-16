@@ -1,5 +1,5 @@
 //int goUmode(void);
-
+//copys and image from one segment to another
 int copyImage(u16 s1,u16 s2, u16 size)
 {
     int i = 0;
@@ -12,7 +12,7 @@ int copyImage(u16 s1,u16 s2, u16 size)
     }
 
 }
-
+//forks from user mode and copies the image from the current proc
 int fork()
 {
     PROC *p;
@@ -71,6 +71,7 @@ int fork()
 
 extern int loader();
 
+//execs a given file path
 int exec(int path)
 {
         

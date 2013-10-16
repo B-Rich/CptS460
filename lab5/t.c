@@ -146,7 +146,7 @@ int grave(){
 }
 
 
-
+//sets the interrupt vector
 int set_vec(vector, addr) u16 vector, addr;
 {
     u16 location,cs;
@@ -154,7 +154,7 @@ int set_vec(vector, addr) u16 vector, addr;
     put_word(addr, 0, location);
     put_word(0x1000,0,location+2);
 }
-
+//changes the process name
 int chname(int name)
 {
     int i=0;
@@ -166,10 +166,12 @@ int chname(int name)
         printf("%c",get_byte(running->uss,name+i));
     }
 }
+//returns to kmode
 int kmode()
 {
     return body();
 }
+//the standard function in kmode
 int body()
 {
     char c;
@@ -195,7 +197,7 @@ int body()
         }
     }
 }
-
+//forks from kmode
 int kfork(char *filename)
 {
     PROC *p;
@@ -270,7 +272,7 @@ int do_tswitch()
 { 
     return tswitch();
 }
-
+//causes the process to exit
 int do_exit()
 {
    return grave();
@@ -330,7 +332,7 @@ void wakeup(int event)
         }
     }
 }
-
+//calls wait
 int do_wait()
 {
     int i;
