@@ -6,6 +6,7 @@ int procSize = sizeof(PROC);
 int nproc = 0;
 
 int body();
+int goUmode();
 int chname(int name);
 void wakeup(int event);
 
@@ -299,6 +300,7 @@ int wait( int * status)
         {
             *status = (&proc[childPid])->exitCode;
             (&proc[childPid])->status = FREE;
+            enqueue(&freeList,&proc[childPid]);
             return childPid;
         }
         sleep(running);
