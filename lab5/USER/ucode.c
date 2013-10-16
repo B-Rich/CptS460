@@ -150,6 +150,7 @@ int write_pipe()
   pfd();
   printf("write : enter fd text : ");
   gets(fds);
+
   //scanf(fds, "%d %s", &fd, buf);
   nbytes = strlen(buf);
             
