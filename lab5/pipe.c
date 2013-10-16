@@ -2,7 +2,7 @@ show_pipe(PIPE *p)
 {
     int i, j;
     printf("------------ PIPE CONTENETS ------------\n");     
-    // print pipe information
+    printf(p->buf);
     printf("\n----------------------------------------\n");
 }
 
@@ -25,22 +25,55 @@ int pfd()
     }
 }
 
+//reads a pipe 
 int read_pipe(int fd, char *buf, int n)
 {
     // your code for read_pipe()
+    
 }
 
 int write_pipe(int fd, char *buf, int n)
 {
     // your code for write_pipe()
+    int i;
+    /*for (i = 0;i<32;i++)
+    {
+        running->name[i]=get_byte(running->uss,name+i);
+        if (get_byte(running->uss,name+i)==0)
+            break;
+        printf("%c",get_byte(running->uss,name+i));
+    }*/
+
+    for (i = 0; i<n;i++)
+    {
+        oft[fd].pipe_ptr->buf[i+oft[fd].pipe_ptr->tail]=get_byte(running->uss,buf+i);
+    }
+    oft[fd].pipe_ptr->tail = oft[fd].pipe_ptr->tail + n;
+    show_pipe(oft[fd].pipe_ptr);
+    return n;
 }
 
 int kpipe(int pd[2])
 {
     // create a pipe; fill pd[0] pd[1] (in USER mode!!!) with descriptors
-    int i=0;
+    int i=0,j = 0;
     pd[0]=-1;
     pd[1]=-1;
+    for (i=0;i<NPIPE;i++)
+    {
+        if (pipe[i].busy!=0)
+        {
+            j = i;
+            
+            pipe[i].head = 0;
+            pipe[i].tail = 0;
+            pipe[i].room = 1024;
+            pipe[i].busy = 1;
+
+            break;
+
+        }
+    }
     for (i=0; i < NOFT ;i++)
     {
         if (oft[i].refCount == 0)
@@ -49,6 +82,8 @@ int kpipe(int pd[2])
             oft[i].refCount = 1;
             oft[i].mode = READ_PIPE;
             running->fd[i]=&oft[i];
+            oft[i].pipe_ptr = &pipe[j];
+            oft[i].pipe_ptr->nreader = i; 
             break; 
         }
     }
@@ -60,6 +95,8 @@ int kpipe(int pd[2])
             oft[i].refCount = 1;
             oft[i].mode = WRITE_PIPE;
             running->fd[i]=&oft[i];
+            oft[i].pipe_ptr = &pipe[j];
+            oft[i].pipe_ptr->nwriter = i;
             break;
         }
     }
