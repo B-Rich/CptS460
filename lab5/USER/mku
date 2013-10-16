@@ -1,13 +1,13 @@
 VFD=../mtximage     # change VFD to YOUR virtual fd
 
 echo --------------------- make $1 -----------------------
-bcc -c -ansi $1.c
+bcc -c -ansi $1.c -0 
 as86 -o u.o u.s
-ld86 -o $1 u.o $1.o ../mtxlib /usr/lib/bcc/libc.a
+ld86 -o $1 u.o $1.o ../mtxlib /usr/lib/bcc/libc.a -s
 
 mount -o loop $VFD /mnt
 cp $1 /mnt/bin/$1
 umount /mnt
 
-rm *.o $1
+rm *.o
 echo done $1

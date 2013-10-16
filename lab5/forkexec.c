@@ -21,7 +21,7 @@ int fork()
   }
   p = &proc[pid];   // we can do this because of static pid
   segment = (pid+1)*0x1000;
-  copyImage(running->uss, segment, 32*1024);
+  copyImage(running->uss, segment, 0x1000);
 
   // YOUR CODE to make the child runnable in User mode  
 

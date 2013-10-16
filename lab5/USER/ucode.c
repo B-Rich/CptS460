@@ -111,8 +111,7 @@ int pipe()
 {
    printf("pipe syscall\n");
    syscall(30, pd, 0);
-   printf("proc %d created a pipe with fd = %d %d\n", 
-           getpid(), pd[0], pd[1]);
+   printf("proc %d created a pipe with fd = %d %d\n", getpid(), pd[0], pd[1]);
 }
 
 int pfd()
@@ -122,7 +121,7 @@ int pfd()
   
 int read_pipe()
 {
-  char fds[32], buf[1024]; 
+  /*char fds[32], buf[1024]; 
   int fd, n, nbytes;
   pfd();
 
@@ -141,11 +140,12 @@ int read_pipe()
   }
   else
     printf("read pipe failed\n");
+*/
 }
 
 int write_pipe()
 {
-  char fds[16], buf[1024]; 
+  /*char fds[16], buf[1024]; 
   int fd, n, nbytes;
   pfd();
   printf("write : enter fd text : ");
@@ -162,16 +162,18 @@ int write_pipe()
   }
   else
     printf("write pipe failed\n");
+*/
 }
 
 int close_pipe()
 {
-  char s[16]; 
+  /*char s[16]; 
   int fd;
   printf("enter fd to close : ");
   gets(s);
   fd = atoi(s);
   syscall(33, fd);
+*/
 }
 
 int invalid(name) char *name;
