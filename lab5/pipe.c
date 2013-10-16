@@ -1,6 +1,8 @@
 show_pipe(PIPE *p)
 {
     int i, j;
+    printf("Data: %d \n", p->tail - p->head);
+    printf("Room: %d \n", 1024 - (p->tail - p->head));
     printf("------------ PIPE CONTENETS ------------\n");     
     printf(p->buf);
     printf("\n----------------------------------------\n");
