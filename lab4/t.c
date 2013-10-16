@@ -492,7 +492,7 @@ int do_fork()
 
     return p->pid;
 }
-
+//copys the image of the running proc into child_segment
 void copy_image(int child_segment)
 {
     int i = 0;
