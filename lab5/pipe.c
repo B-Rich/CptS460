@@ -116,7 +116,7 @@ int kpipe(int pd[2])
             oft[i].mode = READ_PIPE;
             running->fd[i]=&oft[i];
             oft[i].pipe_ptr = &pipe[j];
-            oft[i].pipe_ptr->nreader = i; 
+            oft[i].pipe_ptr->nreader ++; 
             break; 
         }
     }
@@ -129,7 +129,7 @@ int kpipe(int pd[2])
             oft[i].mode = WRITE_PIPE;
             running->fd[i]=&oft[i];
             oft[i].pipe_ptr = &pipe[j];
-            oft[i].pipe_ptr->nwriter = i;
+            oft[i].pipe_ptr->nwriter ++;
             break;
         }
     }
@@ -145,7 +145,8 @@ int close_pipe(int fd)
 
     op = running->fd[fd];
     running->fd[fd] = 0;                 // clear fd[fd] entry 
-
+    oft[fd].pipe_ptr = 0;
+    oft[fd].refCount --;
     if (op->mode == READ_PIPE){
         pp = op->pipe_ptr;
         pp->nreader--;                   // dec n reader by 1
