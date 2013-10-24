@@ -19,13 +19,14 @@ int kcinth()
        case 4 : r = tswitch();        break;
        case 5 : r = do_wait(y);       break;
        case 6  : r = do_exit(y);      break;       
-   
+
        case 7  : r = ufork();         break;
        case 8 :  r = exec(y);         break;
  
        case 9 : r = chcolor(y); break;
 
        case 10: r = putc(y); break;
+       case 11: r = do_usleep(y); break;
 
        case 99 : do_exit(y);           break;
  

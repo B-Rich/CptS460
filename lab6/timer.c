@@ -23,6 +23,9 @@ int enable_irq(irq_nr) unsigned irq_nr;
  *===========================================================================*/
 
 ushort tick;
+ushort on;
+ushort fdc;
+int timerCount = 0;
 
 int timer_init()
 {
@@ -43,12 +46,58 @@ int timer_init()
 
 int thandler()
 {
-    tick++; 
+    int i;
+    PROC* p;
+    tick++;
+    
     tick %= 60;
 
     if (tick % 60 == 0)
-       printf("1 second timer interrupt\n");
-
+    {
+        fdc ++;
+        fdc %= 5;
+        setClock(timerCount);
+        timerCount++;
+        //decrement the sleep time of everything in the sleep queue by 1
+        p = sleepList;
+        while(p!=0)
+        {
+            if (p->time == 0)
+            {    
+                //printf("waking on %d\n", p);
+                wakeup(p);
+            }
+            else
+                p->time--;
+            //printf("sleeping for %d more seconds\n",p->time);
+            p = p->next;
+        }
+        //decrement the running proccess by one if it is in umode
+        if (inkmode == 1)
+        {
+            if (running->time == 0)
+            {
+                out_byte(0x20,0x20);
+                running->time = 5;
+                tswitch();
+            }
+            else
+                running->time--;
+        }
+        // every 5 seconds toggle fd1
+        if (on && fdc == 0)
+        {
+            printf("floopy off\n");
+            out_byte(0x0c,0x3f2);
+            on = 0;
+        }
+        else if (!on && fdc == 0)
+        {
+            printf("floopy on\n");
+            out_byte(0x1c,0x3f2);
+            on = 1;
+        }
+    }
     out_byte(0x20, 0x20);  
 
 }

@@ -6,7 +6,7 @@ mount -o loop mtximage /mnt
 cp a.out /mnt/boot/mtx
 umount /mnt
 
-(cd USER; mku u1; mku u2)
+(cd USER; ./mku u1; ./mku u2)
 
 rm *.o a.out
 echo done mtx

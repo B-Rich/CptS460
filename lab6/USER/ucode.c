@@ -1,13 +1,14 @@
 // ucode.c file
 
 char *cmd[]={"getpid", "ps", "chname", "kmode", "switch", "wait", "die", 
-             "fork", "exec", "color", 0};
+             "fork", "exec", "color","sleep", 0};
 
 int show_menu()
 {
    printf("************************* Menu *****************************\n");
    printf("*  ps  chname  kmode  switch  wait  die  fork  exec  color *\n");
    /*         1     2      3       4      5     6    7     8      9   */
+   printf("*  sleep                                                   *\n");
    printf("************************************************************\n");
 }
 
@@ -118,5 +119,18 @@ int putc(c) char c;
 int invalid(name) char *name;
 {
     printf("Invalid command : %s\n", name);
+}
+//prompts the user for a number of seconds to sleep for and then puts the
+//process to sleep for that many seconds
+int usleep()
+{
+    int i;
+    char s[64];
+    printf("\nhow long to sleep for:  ");
+    gets(s);
+    i = atoi(s);
+    syscall(11, i, 0);
+
+
 }
 

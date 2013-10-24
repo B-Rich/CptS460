@@ -5,7 +5,7 @@
 #define NPROC     9
 #define SSIZE  1024
 #define NQUEUE NPROC    // at most NPROC ready queues
-   
+
 #define FREE      0    // proc statuc
 #define READY     1 
 #define SLEEP     2
@@ -16,29 +16,29 @@
 //             Then, name[32], exitValue.
 
 typedef struct proc{
-    struct proc *next;
-           int  *ksp;
- 
-           int   uss, usp;  // at 4, 6
+struct proc *next;
+int  *ksp;
 
-           int   pid;      
-           int   status; 
-           int   pri;      
-           int   ppid;     
+int   uss, usp;  // at 4, 6
 
-           struct proc *parent;
-           int    event;
-           char   *deathCry;
+int   pid;      
+int   status; 
+int   pri;      
+int   ppid;     
 
-           int   exitValue;
-           char  name[32];
+struct proc *parent;
+int    event;
+char   *deathCry;
 
-           int   time;            // for Umode running time slice
-           int   killed;
-           int   kstack[SSIZE];   // Kmode per process stack
+int   exitValue;
+char  name[32];
+
+int   time;            // for Umode running time slice
+int   killed;
+int   kstack[SSIZE];   // Kmode per process stack
 }PROC;
 
-**************************************************************/
+ **************************************************************/
 #include "type.h"
 
 struct rqueue rqueue[NQUEUE];       // at most NPROC separate ready queues
@@ -49,10 +49,10 @@ int procsize = sizeof(PROC);
 int nproc, color;
 
 int inkmode = 1;        // ADD KUmode transition flag; start in Kmode
- 
+
 int body();
 char *pname[]={"Sun", "Mercury", "Venus", "Earth",  "Mars", "Jupiter", 
-               "Saturn", "Uranus", "Neptune" };
+    "Saturn", "Uranus", "Neptune" };
 
 
 /**********************************************************
@@ -61,7 +61,7 @@ char *pname[]={"Sun", "Mercury", "Venus", "Earth",  "Mars", "Jupiter",
 #include "wait.c"
 #include "loader.c"
 #include "forkexec.c"
-*********************************************************/
+ *********************************************************/
 
 #include "int.c"
 #include "vid.c" 
@@ -69,68 +69,68 @@ char *pname[]={"Sun", "Mercury", "Venus", "Earth",  "Mars", "Jupiter",
 
 int initialize()
 {
-  int i; PROC *p;
+    int i; PROC *p;
 
-  printf("MTX initializing ....\n");
-   
-  for (i=0; i < NPROC; i++){
-      proc[i].pid = i; 
-      proc[i].status = FREE;
-      proc[i].next = (PROC *)&proc[(i+1)];
+    printf("MTX initializing ....\n");
 
-      strcpy(proc[i].name, pname[i]);
-  }
-  proc[NPROC-1].next = NULL;
-  freeList = &proc[0];         // all PROC are FREE initially
-   
-  for (i=0; i<NQUEUE; i++){    // initialize the scheduling queues
-      rqueue[i].priority = i;
-      rqueue[i].queue = 0;
-  }
-  sleepList = 0;
+    for (i=0; i < NPROC; i++){
+        proc[i].pid = i; 
+        proc[i].status = FREE;
+        proc[i].next = (PROC *)&proc[(i+1)];
 
-  // create P0
-  p = getproc();              // get a FREE PROC
+        strcpy(proc[i].name, pname[i]);
+    }
+    proc[NPROC-1].next = NULL;
+    freeList = &proc[0];         // all PROC are FREE initially
 
-  p->status = READY;
-  p->pri = 0;                /* lowest priority  0 */
-  p->pid = 0;                /* process 0 or P0 */
-  running = p;
-  p->ppid = running->pid;    /* P0's parent is P0 */
-  nproc = 1;
+    for (i=0; i<NQUEUE; i++){    // initialize the scheduling queues
+        rqueue[i].priority = i;
+        rqueue[i].queue = 0;
+    }
+    sleepList = 0;
 
-  printf("initialization complete\n"); 
+    // create P0
+    p = getproc();              // get a FREE PROC
+
+    p->status = READY;
+    p->pri = 0;                /* lowest priority  0 */
+    p->pid = 0;                /* process 0 or P0 */
+    running = p;
+    p->ppid = running->pid;    /* P0's parent is P0 */
+    nproc = 1;
+    setClock(0);
+    printf("initialization complete\n"); 
 }
 
- 
+
 int body()
 {
-  char c;
-  while(1){
-    printf("------------------------------------------\n"); 
-    printf("I am process P%d    My parent=%d\n", running->pid, running->ppid);
-    
-    //color = 0x0001 + running->pid;
-    printf("******************************************\n");
-    printf("freeList   = "); printList(freeList);
-    printQ();
-    printsleep();
-    printf("******************************************\n");
+    char c;
+    while(1){
+        printf("------------------------------------------\n"); 
+        printf("I am process P%d    My parent=%d\n", running->pid, running->ppid);
 
-    printf("input a command : [s|q|f|w|u] : ");
-    c = getc();   
-    printf("%c\n", c);
+        //color = 0x0001 + running->pid;
+        printf("******************************************\n");
+        printf("freeList   = "); printList(freeList);
+        printQ();
+        printsleep();
+        printf("******************************************\n");
 
-    switch(c){
-      case  's' : do_switch();  break;
-      case  'q' : do_exit(100); break;   /* no return */
-      case  'f' : do_kfork();   break;
-      case  'w' : do_wait(0);   break;
-      case  'u' : goUmode();    break;
+        printf("input a command : [s|q|f|w|u] : ");
+        c = getc();   
+        printf("%c\n", c);
 
-      default   :              break;  
+        switch(c){
+            case  's' : do_switch();  break;
+            case  'q' : do_exit(100); break;   /* no return */
+            case  'f' : do_kfork();   break;
+            case  'w' : do_wait(0);   break;
+            case  'u' : goUmode();    break;
+
+            default   :              break;  
+        }
     }
-  }
 }
 
 int int80h();
@@ -149,50 +149,57 @@ int tinth();
 main()
 {
 
-   vid_init();
-   printf("vid_init : console display driver initialized\n");
+    vid_init();
+    printf("vid_init : console display driver initialized\n");
 
-   printf("\nWelcome to the MTX Operating System\n");
-    
+    printf("\nWelcome to the MTX Operating System\n");
+
     initialize();
- 
-     set_vec(80, int80h);
 
-   printf("P0 forks P1\n");
-     kfork();
+    set_vec(80, int80h);
 
-     lock();
-       set_vec( 8, tinth);
-       timer_init(); 
+    printf("P0 forks P1\n");
+    kfork();
 
-   printf("P0 switches to P1\n");
+    lock();
+    set_vec( 8, tinth);
+    timer_init(); 
 
-   while(1){
-      if (rqueue[1].queue)
-         tswitch();
-   }
-   printf("P0 resumes: all dead, happy ending!\n");
+    printf("P0 switches to P1\n");
+
+    while(1){
+        if (rqueue[1].queue)
+            tswitch();
+    }
+    printf("P0 resumes: all dead, happy ending!\n");
 }
+//puts the proccess to sleep for the specified time.
+int do_usleep (k) int k;
+{
+    running->time = k;
+    printf("running process set to sleep for %d seconds",k);
+    sleep(running);
 
+}
 //******** scheduler *******************
 
 int scheduler()
 { 
-  PROC *p;
-  int i;
+    PROC *p;
+    int i;
 
-  if (running->status == READY)
-      enqueue(running);
+    if (running->status == READY)
+        enqueue(running);
 
-  for (i=NQUEUE-1; i>=0; i--){
-       running = dequeue(&rqueue[i].queue);
-       if (running)
-          break;
-  }
+    for (i=NQUEUE-1; i>=0; i--){
+        running = dequeue(&rqueue[i].queue);
+        if (running)
+            break;
+    }
 
-  running->time = 5;
-  color = 0x09 + running->pid;
-  printf("next running=%d  time : ", running->pid);
+    running->time = 5;
+    color = 0x09 + running->pid;
+    printf("next running=%d  time : %d", running->pid,running->time);
 }
 
 
