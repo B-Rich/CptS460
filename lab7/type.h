@@ -22,13 +22,16 @@ typedef struct proc{
         int    *ksp; 
         int    uss,usp;
         int    inkmode;
-
+        
+        struct proc *parent;
+        int     priority;
         int     pid;
         int     ppid;
         int     status;
         int     pri;          
         char    name[32];    
         int     event;
+        int     exitCode;
 
         int kstack[SSIZE];
 }PROC;        

@@ -7,6 +7,7 @@
 .globl _main,_prints                                 
 .globl _tswitch,_running,_scheduler
 .globl _int80h,_kcinth
+.globl _kbinth,_kbhandler
 .globl _diskr,_diskw
 .globl _getcs, _goUmode, _procSize
 .globl _get_byte,_put_byte
@@ -125,7 +126,7 @@ INK =   8
 _int80h: INTH kcinth
 
 !_tinth:  INTH thandler
-!_kbinth: INTH kbhandler
+_kbinth: INTH kbhandler
 
 _s0inth: INTH s0handler
 _s1inth: INTH s1handler
