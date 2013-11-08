@@ -65,14 +65,14 @@ int kbhandler()
     out_byte(PORT_B, value | KBIT);/* first, strobe the bit high */
     out_byte(PORT_B, value); /* then strobe it low */
 
-    printf("kb interrupt %x\n", scode);  // should see the scand code
+    //printf("kb interrupt %x\n", scode);  // should see the scand code
     if (scode & 0x80)                    // ignore key release
         goto out;
 
     kbc = unshift[scode];                // translate scan code into ASCII char
 
     kbdata = 1;                          // raise kbdata flag
-
+    //printf("kb data = %d\n",kbdata);
 out:
     out_byte(0x20, 0x20); 
 }
@@ -82,12 +82,13 @@ out:
 int getc()
 {
     char c;
-
+    //printf("in getc\n");
     unlock();          // syscall to MTX kernel MAY have masked out interrupts
 
     while(kbdata==0);  // busy waiting loop for kbdata = 1
 
     c = kbc & 0x7F;// in general, get char from a COMMON data area, e.g. a kbbuf[]
+    //printf("recieved character\n");
     lock();
     kbdata = 0;       // this is a CR between process and interrupt
     unlock();

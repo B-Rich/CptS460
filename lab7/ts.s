@@ -3,7 +3,7 @@
 .globl begtext, begdata, begbss                      ! needed by linker
 
 !               IMPORTS and EXPORTS
-.globl _resetVideo,_getc,_putc,_setes,_inces 
+.globl _resetVideo,_putc,_setes,_inces 
 .globl _main,_prints                                 
 .globl _tswitch,_running,_scheduler
 .globl _int80h,_kcinth
@@ -209,10 +209,10 @@ _diskw:
         !---------------------------------------------
         !  char getc[]   function: returns a char
         !---------------------------------------------
-_getc:
-        xorb   ah,ah           ! clear ah
-        int    0x16            ! call BIOS to get a char in AX
-        ret 
+!_getc:
+!        xorb   ah,ah           ! clear ah
+!        int    0x16            ! call BIOS to get a char in AX
+!        ret 
 
         !----------------------------------------------
         ! void putc[char c]  function: print a char

@@ -291,14 +291,15 @@ PROC* dequeue(PROC ** queue)
     return p;
 }
 
-PROC* get_proc(PROC * list)
+PROC* get_proc(PROC ** list)
 {
     return dequeue(list);
 }
 
 PROC* getproc()
 {
-    return get_proc(freeList);
+    printf("getting Proc\n");
+    return get_proc(&freeList);
 }
 
 //prints the queue in tasteful arrow notation
@@ -315,15 +316,16 @@ void printQueue(PROC ** queue)
   
 int body()
 {
-   char c, CR, buf[64];
+   char c, CR, buf[64],save;
    while(1){
       printf("=======================================\n");
       printQueue(readyQueue);      
 
       printf("proc %d %s in Kmode\n", running->pid, running->name);
       printf("input a command (s|f|u|q|i|o) : ");
-      c=getc(); putc(c); CR=getc(); putc(CR);
-      switch(c){
+      c=getc(); putc(c); save = c; CR=getc(); putc(CR);
+
+      switch(save){
           case 's' : tswitch(); break;
           case 'u' : printf("\nProc %d ready to go U mode\n", running->pid);
                      goUmode(); break;
