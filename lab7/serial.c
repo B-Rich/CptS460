@@ -216,6 +216,12 @@ int do_rx(struct stty *tty)   /* interrupts already disabled */
 
     printf("port %x interrupt : c=%c\n", tty->port, c);
 
+    tty->inbuf[tty->inhead]=c;
+    tty->inhead++;
+    tty->inhead %= INBUFLEN;
+
+    printf("rx char read: %c\n",tty->inbuf[tty->inhead]);
+
     /********* WRITE CODE ***************
       put char into stty[port]'s inbuf[ ]
      *************************************/
@@ -237,6 +243,9 @@ int sgetc(struct stty *tty)
 { 
     int c;
     P(&tty->inchars);   /* wait if no input char yet */
+    c = tty->inbuf[tty->intail];
+    tty->intail++;
+    tty->intail %= INBUFLEN;
 
     // WRITE CODE TO get a char c from tty->inbuf[ ]
 
@@ -246,10 +255,19 @@ int sgetc(struct stty *tty)
 int sgetline(int port, char *line)
 {  
     struct stty *tty = &stty[port];
+    char c;
+    int i=0;
     printf("sgetline from port %d\n", port);
+    do 
+    {
+        c = sgetc(stty);
+        printf("SGL char read: %c,i = %d\n",c);
+        line[i]=c;
+        i++;
 
-    // WRITE CODE to get a line from serial port
+    }while(c != '\r');
 
+    printf("ready to return %s\n",line);
     return strlen(line);
 }
 
