@@ -277,7 +277,11 @@ int do_tx(struct stty *tty)
 {
     int c;
     printf("tx interrupt ");
-
+    if (tty->outtail == tty->outhead)
+    {
+        disable_tx(tty);
+        return;
+    }
     /************** WRITE CODE TO DO THESE *********************
       (1). if (nothing to output){ 
       disable tx interrupt;
@@ -293,6 +297,13 @@ int do_tx(struct stty *tty)
       V(&tty->outroom);
       return;
      ************************************************************/
+     lock();
+     putc(tty->outbuf[tty->outtail]);
+     tty->outtail++;
+     tty->outtail %= OUTBUFLEN;
+     V(&tty->outroom);
+     unlock();
+     return;
 }
 
 int sputc(struct stty *tty, int c)
@@ -301,6 +312,10 @@ int sputc(struct stty *tty, int c)
 
     lock();             
     //  WRITE CODE to enter c into outbuf[ ];
+    tty->outbuf[tty->outhead] = c;
+    tty->outhead++;
+    tty->outhead %= OUTBUFLEN;
+
     unlock();
 
     if (!tty->tx_on) 
@@ -311,6 +326,12 @@ int sputc(struct stty *tty, int c)
 int sputline(int port, char *line)
 {
     struct stty *tty = &stty[port];
+    int i = 0;
+    while (line[i] != '\r')
+    {
+        sputc(tty,line[i]);
+    }
+    printf("output line: %s, to serial port\n",line);
     //WRITE CODE to output line to serial port
 }
 
