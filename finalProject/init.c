@@ -1,10 +1,15 @@
 int pid, child, status;
 int stdin,stdout;
 #include "ucode.c"
+
+int login();
+int parent();
+
 main(int arc, char * argv[])
 {
     //open /dev/tty0 as read and write in order to display messages
-    
+    open("/dev/tty0",READ);//READ
+    open("/dev/tty0",WRITE);//WRITE
 
     //once thats done we can use print f which calls putc() to write to stdout
     printf("ASINIT : fork a login task on console\n");
@@ -18,7 +23,7 @@ main(int arc, char * argv[])
 
 }
 
-int login
+int login()
 {
     exec("login /dev/tty0");
 }

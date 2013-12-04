@@ -1,3 +1,5 @@
 vdisk
 vdisk.bk
 460last.tar.gz
+LAST/*
+*.o
