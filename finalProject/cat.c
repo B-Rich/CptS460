@@ -19,7 +19,7 @@ int main(int argc, char *argv[])
         bytesread = read(fd,buff,1024);
         write(1,buff,bytesread);
     }while(bytesread == 1024);
-
+    close(fd);
 
 
 
