@@ -3,10 +3,13 @@
 int main(int argc, char * argv[])
 {
     int child=0;
+    int redirout = 0;
+    int redirin = 0;
+    int redirapp = 0;
     int status;
     int pid;
     int numargs;
-    int i;
+    int i,j;
     char line[64];
     char * tok;
     char args[8][64];
@@ -54,15 +57,85 @@ int main(int argc, char * argv[])
             //handle pipes
             //handle redirection
 
+            for (i = 1;i<numargs;i++)
+            {
+                if (strcmp(args[i],">")==0)
+                {
+                    //flag to redirect out
+                    redirout = 1;
+                    //copy the args before args[i] into args[0]
+                    strcpy(args[0],"");
+                    for (j = 1;j<i;j++)
+                    {
+                        strcat(args[0],args[j]);
+                        strcat(args[0]," ");
+                    }
+                    strcpy(args[1],args[i+1]);
+                    break;
+                    
+                }
+                else if (strcmp(args[i],"<")==0)
+                {
+                    //flag to redirect in
+                    redirin = 1; 
+                    //copy the args before args[i] into args[0]
+                    strcpy(args[0],"");
+                    for (j = 1;j<i;j++)
+                    {
+                        strcat(args[0],args[j]);
+                        strcat(args[0]," ");
+                    }
+                    strcpy(args[1],args[i+1]);
+                    break;
+                }
+                else if (strcmp(args[i],">>")==0)
+                {
+                    //flag to redirect out
+                    redirapp = 1;
+                    //copy the args before args[i] into args[0]
+                    strcpy(args[0],"");
+                    for (j = 1;j<i;j++)
+                    {
+                        strcat(args[0],args[j]);
+                        strcat(args[0]," ");
+                    }
+                    strcpy(args[1],args[i+1]);
+                    break;
+
+
+                }
+            }
 
 
             child = fork();
             if (child)
             {
+                redirout = 0;
+                redirin = 0;
+                redirapp = 0;
                 pid = wait(&status);
             }
             else
             {
+                if (redirout)
+                {
+                    close(1);
+                    open(args[1],O_WRONLY | O_CREAT);
+                    redirout = 0;
+                }
+                else if (redirapp)
+                {
+                    close(1);
+                    open(args[1],O_WRONLY | O_CREAT | O_APPEND);
+                    redirapp = 0;
+
+                }
+                else if (redirin)
+                {
+                    close(0);
+                    open(args[1],READ);
+                    redirin = 0;
+                }
                 status = exec(args[0]);
             }
         }
