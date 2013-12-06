@@ -32,13 +32,17 @@ int main(int argc,char * argv[])
             //we have a split line to handle
             offset = 0;
             bytesread = read(fd,buff,1024);
+            if (bytesread < 1024)
+            {
+                buff[bytesread] = '\0';
+            }
             readchar = readUntilChar(buff,line+readchar,'\n',&offset);
         }
         if (grep(argv[1],line)==1)
         {
             printf("%s\r\n",line);
         }
-    }while(readchar != -1);
+    }while(readchar != -1 );
 }
 
 
