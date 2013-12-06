@@ -4,10 +4,10 @@ int grep(char * pattern, char * line);
 
 int main(int argc,char * argv[])
 {
-    int fd,offset;
+    int fd,offset=0,bytesread,readchar;
     char buff[1024];
     char line[1024];
-    if(argc > 3)
+    if(argc < 3)
     {
         fd = 0;
     }
@@ -15,18 +15,30 @@ int main(int argc,char * argv[])
     {
         fd = open(argv[2],READ);
     }
-    
+
     //get lines from file, print them if they match pattern
     //no regex support required(thank god)
-    read(fd,buff,1024);
-    while (readUntilChar(buff,line,'\n',offset) != -1)
+    
+    bytesread = read(fd,buff,1024);
+    //printf("fd = %d,buff = %s,bytes read = %d\r\n",fd,buff,bytesread);
+
+    do 
     {
+        //printf("\r\nBefore: buff: %s\r\n line: %s\r\n offset: %d\r\n",buff,line,offset);
+        readchar = readUntilChar(buff,line,'\n',&offset);
+        //printf("Chars read %d",readchar);
+        if (offset == 1024)
+        {
+            //we have a split line to handle
+            offset = 0;
+            bytesread = read(fd,buff,1024);
+            readchar = readUntilChar(buff,line+readchar,'\n',&offset);
+        }
         if (grep(argv[1],line)==1)
         {
             printf("%s\r\n",line);
         }
-    }
-    
+    }while(readchar != -1);
 }
 
 
