@@ -1,4 +1,4 @@
-int pid, child, status;
+int pid, child, status,serial1=0,serial2=0;
 int stdin,stdout;
 #include "ucode.c"
 
@@ -33,6 +33,28 @@ int parent()
     while(1)
     {
         
+        //close(0);close(1);
+        //start login procs on serial
+        serial1=fork();
+        if(serial1)
+        {
+            
+        }
+        else
+        {
+            exec("login /dev/ttyS0");
+        }
+        serial2=fork();
+        if(serial2)
+        {
+
+        }
+        else
+        {
+            exec("login /dev/ttyS1");
+        }
+        //open(0,READ);
+        //open(1,WRITE);
         printf("ASINIT : waiting ..... \n");
         pid = wait(&status);
         if (pid == child)

@@ -46,7 +46,7 @@ int main(int argc, char * argv[])
             else
                 chdir(args[2]);
         }
-        else if (strcmp(args[1],"exit")==0)
+        else if (strcmp(args[1],"exit")==0 || strcmp(args[1],"logout")==0)
         {
             exit();
         }
