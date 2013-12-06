@@ -12,7 +12,7 @@ int main(int argc, char * argv[])
     char args[8][64];
     while(1)
     {
-        
+
         printf("alexSH: ");
         gets(line);
         //tokenize the string
@@ -25,20 +25,46 @@ int main(int argc, char * argv[])
             tok = strtok(0, " ");
             numargs++;
         }
+
         //print out arg list for debugging
         for (i = 0;i<numargs;i++)
         {
             printf("args[%d] = %s\r\n",i,args[i]);
         }
 
-        child = fork();
-        if (child)
+
+        //check if it is a change dir symbol
+        if (strcmp(args[1],"cd")==0)
         {
-            pid = wait(&status);
+            if (strcmp(args[2],"")==0)
+            {
+                //try to go to home directory?
+            }
+            else
+                chdir(args[2]);
+        }
+        else if (strcmp(args[1],"exit")==0)
+        {
+            exit();
         }
         else
         {
-            exec(line);
+
+            //identify if there are any pipes or redirections
+            //handle pipes
+            //handle redirection
+
+
+
+            child = fork();
+            if (child)
+            {
+                pid = wait(&status);
+            }
+            else
+            {
+                status = exec(args[0]);
+            }
         }
     }
 }
