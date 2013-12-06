@@ -1,12 +1,14 @@
 #include "ucode.c"
 #include "util.c"
 
-void space(int fd, char* buff, char* line,int * offset);
+int space(int fd, char* buff, char* line,int * offset);
+int enter(int fd, char* buff, char* line, int* offset);
+
 
 
 int main(int argc,char * argv[])
 {
-    int fd,offset=0,i;
+    int fd,offset=0,i,ret=0;
     char c;
     char buff[1024];
     char line[1024];
@@ -26,16 +28,50 @@ int main(int argc,char * argv[])
     {
         c = getc();
         if (c == ' ')
-            space(fd,buff,line,&offset);
-    }while (c != 'q');
+            ret = space(fd,buff,line,&offset);
+        else if (c == '\r')
+            ret = enter(fd,buff,line,&offset);
+        //printf("ret: %d c: %c\r\n",ret,c);
+    }while (c != 'q' && ret != -1);
     
 }
 
-void space(int fd, char* buff, char* line,int * offset)
+//proccesses a press of the space bar
+int space(int fd, char* buff, char* line,int * offset)
 {
-    int charsread;
+    int charsread,bytesread;
     //if it doesnt run out of space in the buffer
     charsread = readUntilChar(buff,line,'\n',offset);
+    if ((*offset) == 1024)
+    {
+        *offset = 0;
+        bytesread = read(fd,buff,1024);
+        if (bytesread <1024)
+        {
+            buff[bytesread] = '\0';
+        }
+        charsread = readUntilChar(buff,line+charsread,'\n',offset);
+        
+    }
+    if (charsread == -1)
+    {
+        //printf("this happened\r\n");
+        return -1;
+    }
     printf("%s\r\n",line);
+    return 0;
+}
+
+//processes a press of the enter key
+int enter(int fd, char* buff, char* line, int* offset)
+{
+    int i,j;
+    for(i = 0;i<24;i++)
+    {
+        j=space(fd,buff,line,offset);
+        if (j == -1) 
+            return -1;
+    }
+    return 0;
 
 }
