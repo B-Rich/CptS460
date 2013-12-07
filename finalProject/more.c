@@ -32,7 +32,7 @@ int main(int argc,char * argv[])
         else if (c == '\r')
             ret = enter(fd,buff,line,&offset);
         //printf("ret: %d c: %c\r\n",ret,c);
-    }while (c != 'q' && ret != -1);
+    }while (c != 'q' && ret != -1 && c!=255);
     
 }
 
