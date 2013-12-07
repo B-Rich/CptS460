@@ -3,9 +3,13 @@
 int main(int argc, char * argv[])
 {
     int child=0;
+    int pchild = 0;
+    int pstatus = 0;
     int redirout = 0;
     int redirin = 0;
     int redirapp = 0;
+    int redirpipe = 0;
+    int the_pipe[2];
     int status;
     int pid;
     int numargs;
@@ -104,6 +108,26 @@ int main(int argc, char * argv[])
 
 
                 }
+                else if (strcmp(args[i],"|")==0)
+                {
+                    redirpipe = 1;
+                     //copy the args before args[i] into args[0]
+                    strcpy(args[0],"");
+                    for (j = 1;j<i;j++)
+                    {
+                        strcat(args[0],args[j]);
+                        strcat(args[0]," ");
+                    }
+                    //copy the args after the pipe into args[1]
+                    strcpy(args[1],"");
+                    for (j = i+1;j<numargs;j++)
+                    {
+                        strcat(args[1],args[j]);
+                        strcat(args[1]," ");
+                    }
+                    break;
+
+                }
             }
 
 
@@ -113,30 +137,58 @@ int main(int argc, char * argv[])
                 redirout = 0;
                 redirin = 0;
                 redirapp = 0;
+                redirpipe= 0;
                 pid = wait(&status);
             }
             else
             {
-                if (redirout)
+                if (redirpipe)
+                {
+                    pipe(the_pipe);
+                    pchild = fork();
+                    if (pchild)
+                    {
+                        //parent is the read end of the pipe
+                        close(0);
+                        open(the_pipe[0],READ);
+                        redirpipe = 0;
+                        //wait(&pstatus);
+                        status = exec(args[1]);
+                    }
+                    else
+                    {
+                        //child is the write end of the pipe
+                        close(1);
+                        open(the_pipe[1],WRITE);
+                        redirpipe = 0;
+                        pstatus = exec(args[1]);
+                    }
+                }
+                else if (redirout)
                 {
                     close(1);
                     open(args[1],O_WRONLY | O_CREAT);
                     redirout = 0;
+                    status = exec(args[0]);
                 }
                 else if (redirapp)
                 {
                     close(1);
                     open(args[1],O_WRONLY | O_CREAT | O_APPEND);
                     redirapp = 0;
-
+                    status = exec(args[0]);
                 }
                 else if (redirin)
                 {
                     close(0);
                     open(args[1],READ);
                     redirin = 0;
+                    status = exec(args[0]);
                 }
-                status = exec(args[0]);
+                else
+                {
+                    status = exec(args[0]);
+                }
             }
         }
     }
